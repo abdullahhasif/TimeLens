@@ -21,9 +21,9 @@ function loadImage(src: string): Promise<HTMLImageElement> {
  */
 export async function createAlbumPage(imageData: Record<string, string>): Promise<string> {
     const canvas = document.createElement('canvas');
-    // High-resolution canvas for good quality (A4-like ratio)
-    const canvasWidth = 2480;
-    const canvasHeight = 3508;
+    // A mid-resolution canvas for good quality on mobile without crashing (A4-like ratio)
+    const canvasWidth = 1240;
+    const canvasHeight = 1754;
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
     
@@ -40,12 +40,12 @@ export async function createAlbumPage(imageData: Record<string, string>): Promis
     ctx.fillStyle = '#333';
     ctx.textAlign = 'center';
 
-    ctx.font = `bold 100px 'Caveat', cursive`;
-    ctx.fillText('Generated with TimeLens', canvasWidth / 2, 150);
+    ctx.font = `bold 50px 'Caveat', cursive`;
+    ctx.fillText('Generated with TimeLens', canvasWidth / 2, 75);
 
-    ctx.font = `50px 'Roboto', sans-serif`;
+    ctx.font = `25px 'Roboto', sans-serif`;
     ctx.fillStyle = '#555';
-    ctx.fillText('on Google AI Studio', canvasWidth / 2, 220);
+    ctx.fillText('on Google AI Studio', canvasWidth / 2, 110);
 
     // 3. Load all the polaroid images concurrently
     const decades = Object.keys(imageData);
@@ -59,8 +59,8 @@ export async function createAlbumPage(imageData: Record<string, string>): Promis
     }));
 
     // 4. Define grid layout and draw each polaroid
-    const grid = { cols: 2, rows: 3, padding: 100 };
-    const contentTopMargin = 300; // Space for the header
+    const grid = { cols: 2, rows: 3, padding: 50 };
+    const contentTopMargin = 150; // Space for the header
     const contentHeight = canvasHeight - contentTopMargin;
     const cellWidth = (canvasWidth - grid.padding * (grid.cols + 1)) / grid.cols;
     const cellHeight = (contentHeight - grid.padding * (grid.rows + 1)) / grid.rows;
@@ -105,9 +105,9 @@ export async function createAlbumPage(imageData: Record<string, string>): Promis
         
         // Draw a soft shadow
         ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        ctx.shadowBlur = 35;
-        ctx.shadowOffsetX = 5;
-        ctx.shadowOffsetY = 10;
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 5;
         
         // Draw the white polaroid frame (centered at the new origin)
         ctx.fillStyle = '#fff';
@@ -137,7 +137,7 @@ export async function createAlbumPage(imageData: Record<string, string>): Promis
         
         // Draw the handwritten caption
         ctx.fillStyle = '#222';
-        ctx.font = `60px 'Permanent Marker', cursive`;
+        ctx.font = `30px 'Permanent Marker', cursive`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 

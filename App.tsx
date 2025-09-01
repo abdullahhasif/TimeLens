@@ -9,6 +9,7 @@ import PolaroidCard from './components/PolaroidCard';
 import { createAlbumPage } from './lib/albumUtils';
 import Footer from './components/Footer';
 import heic2any from 'heic2any';
+import { resizeImage } from './lib/imageUtils';
 
 const DECADES = ['1950s', '1960s', '1970s', '1980s', '1990s', '2000s'];
 
@@ -118,7 +119,7 @@ function App() {
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
     const [appState, setAppState] = useState<'idle' | 'image-uploaded' | 'generating' | 'results-shown'>('idle');
     const [selectedDecade, setSelectedDecade] = useState<string>(DECADES[0]);
-    const [isConvertingImage, setIsConvertingImage] = useState<boolean>(false);
+    const [processingMessage, setProcessingMessage] = useState<string | null>(null);
 
     // Effect to manage the object URL for the uploaded image
     useEffect(() => {
@@ -151,31 +152,34 @@ function App() {
 
     const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
+            let file = e.target.files[0];
             const fileName = file.name.toLowerCase();
             const fileType = file.type.toLowerCase();
 
             // Reset state for the new upload
             setUploadedImage(null);
             setGeneratedImages({});
+            setProcessingMessage('Processing photo...');
 
-            // Check if it's an HEIC/HEIF file
-            if (fileType.includes('heic') || fileType.includes('heif') || fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
-                setIsConvertingImage(true);
-                try {
-                    const jpegFile = await convertHeicToJpeg(file);
-                    setUploadedImage(jpegFile);
-                    setAppState('image-uploaded');
-                } catch (error) {
-                    console.error("Error handling HEIC image:", error);
-                    alert("Sorry, there was an error processing your iPhone photo. Please try another format like JPEG or PNG.");
-                    e.target.value = ''; // Reset file input to allow re-selection
-                } finally {
-                    setIsConvertingImage(false);
+            try {
+                // Check if it's an HEIC/HEIF file and convert if needed
+                if (fileType.includes('heic') || fileType.includes('heif') || fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
+                    setProcessingMessage('Converting iPhone photo...');
+                    file = await convertHeicToJpeg(file);
                 }
-            } else {
-                setUploadedImage(file);
+
+                // Resize the image for performance and stability
+                setProcessingMessage('Optimizing photo...');
+                const resizedFile = await resizeImage(file, 1024);
+                setUploadedImage(resizedFile);
                 setAppState('image-uploaded');
+
+            } catch (error) {
+                console.error("Error handling image processing:", error);
+                alert("Sorry, there was an error processing your photo. Please try another one.");
+                e.target.value = ''; // Reset file input to allow re-selection
+            } finally {
+                setProcessingMessage(null);
             }
         }
     };
@@ -192,12 +196,10 @@ function App() {
             initialImages[decade] = { status: 'pending' };
         });
         setGeneratedImages(initialImages);
-
-        const concurrencyLimit = 2; // Process two decades at a time
-        const decadesQueue = [...DECADES];
-
-        const processDecade = async (decade: string) => {
-            try {
+        
+        // Generate images sequentially to conserve memory on mobile devices
+        for (const decade of DECADES) {
+             try {
                 const prompt = `Reimagine the person in this photo in the style of the ${decade}. This includes clothing, hairstyle, photo quality, and the overall aesthetic of that decade. The output must be a photorealistic image showing the person clearly.`;
                 const resultBlob = await generateDecadeImage(uploadedImage, prompt);
                 const objectUrl = URL.createObjectURL(resultBlob);
@@ -214,18 +216,7 @@ function App() {
                 }));
                 console.error(`Failed to generate image for ${decade}:`, err);
             }
-        };
-
-        const workers = Array(concurrencyLimit).fill(null).map(async () => {
-            while (decadesQueue.length > 0) {
-                const decade = decadesQueue.shift();
-                if (decade) {
-                    await processDecade(decade);
-                }
-            }
-        });
-
-        await Promise.all(workers);
+        }
 
         setIsLoading(false);
         setAppState('results-shown');
@@ -351,11 +342,11 @@ function App() {
                         >
                             <label htmlFor="file-upload" className="cursor-pointer group">
                                  <PolaroidCard 
-                                     caption={isConvertingImage ? "Converting photo..." : "Click to begin"}
-                                     status={isConvertingImage ? 'pending' : 'done'}
+                                     caption={processingMessage || "Click to begin"}
+                                     status={processingMessage ? 'pending' : 'done'}
                                  />
                             </label>
-                            <input id="file-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/webp, image/heic, image/heif" onChange={handleImageUpload} />
+                            <input id="file-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/webp, image/heic, image/heif" onChange={handleImageUpload} disabled={!!processingMessage}/>
                             <p className="mt-8 text-neutral-500 text-center max-w-xs text-lg">
                                 Click the polaroid to upload your photo and start your journey through time.
                             </p>
