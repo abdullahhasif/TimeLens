@@ -50,6 +50,59 @@ const ErrorDisplay = () => (
     </div>
 );
 
+/**
+ * Converts a HEIC file to a JPEG data URL. It first tries a native,
+ * canvas-based approach which is fast and works in browsers like Safari.
+ * If that fails, it falls back to the heic2any library.
+ * @param file The HEIC file to convert.
+ * @returns A promise that resolves to a JPEG data URL string.
+ */
+const convertHeicToJpeg = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        // Native canvas-based approach (works in Safari)
+        const imageUrl = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+            console.log("Successfully loaded HEIC via native browser support.");
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                URL.revokeObjectURL(imageUrl);
+                return reject(new Error("Could not get canvas context for conversion."));
+            }
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(imageUrl);
+            resolve(canvas.toDataURL('image/jpeg', 0.92));
+        };
+
+        img.onerror = async () => {
+            // Fallback for browsers that don't support HEIC natively (e.g., Chrome, Firefox)
+            URL.revokeObjectURL(imageUrl);
+            console.warn("Native HEIC loading failed. Falling back to heic2any library.");
+            try {
+                const conversionResult = await heic2any({
+                    blob: file,
+                    toType: "image/jpeg",
+                    quality: 0.92,
+                });
+                const convertedBlob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = (e) => reject(e);
+                reader.readAsDataURL(convertedBlob as Blob);
+            } catch (error) {
+                console.error("heic2any conversion failed:", error);
+                reject(error);
+            }
+        };
+
+        img.src = imageUrl;
+    });
+};
+
 
 function App() {
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -71,29 +124,16 @@ function App() {
             if (fileType.includes('heic') || fileType.includes('heif') || fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
                 setIsConvertingImage(true);
                 try {
-                    // Convert to JPEG
-                    const conversionResult = await heic2any({
-                        blob: file,
-                        toType: "image/jpeg",
-                        quality: 0.92, // High quality conversion
-                    });
-
-                    const convertedBlob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
-
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        setUploadedImage(reader.result as string);
-                        setAppState('image-uploaded');
-                        setGeneratedImages({});
-                        setIsConvertingImage(false);
-                    };
-                    reader.readAsDataURL(convertedBlob as Blob);
-
+                    const jpegDataUrl = await convertHeicToJpeg(file);
+                    setUploadedImage(jpegDataUrl);
+                    setAppState('image-uploaded');
+                    setGeneratedImages({});
                 } catch (error) {
-                    console.error("Error converting HEIC image:", error);
-                    alert("Sorry, there was an error converting your iPhone photo. Please try another format like JPEG or PNG.");
-                    setIsConvertingImage(false);
+                    console.error("Error handling HEIC image:", error);
+                    alert("Sorry, there was an error processing your iPhone photo. Please try another format like JPEG or PNG.");
                     e.target.value = ''; // Reset file input to allow re-selection
+                } finally {
+                    setIsConvertingImage(false);
                 }
             } else {
                 // For other image types, proceed as before
