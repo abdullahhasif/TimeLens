@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React, { useState, ChangeEvent, useEffect } from 'react';
+import React, { useState, ChangeEvent, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateDecadeImage } from './services/geminiService';
 import PolaroidCard from './components/PolaroidCard';
@@ -121,6 +121,12 @@ function App() {
     const [selectedDecade, setSelectedDecade] = useState<string>(DECADES[0]);
     const [processingMessage, setProcessingMessage] = useState<string | null>(null);
 
+    // Create a ref to hold the latest generatedImages state for cleanup on unmount.
+    const generatedImagesRef = useRef(generatedImages);
+    useEffect(() => {
+        generatedImagesRef.current = generatedImages;
+    });
+
     // Effect to manage the object URL for the uploaded image
     useEffect(() => {
         let objectUrl: string | null = null;
@@ -138,16 +144,17 @@ function App() {
         };
     }, [uploadedImage]);
 
-    // Effect to manage and revoke object URLs for generated images to prevent memory leaks
+    // This effect runs only on unmount to clean up all generated image URLs.
     useEffect(() => {
-        const urlsToRevoke = Object.values(generatedImages)
-            .map(img => img.url)
-            .filter((url): url is string => !!url && url.startsWith('blob:'));
-
         return () => {
-            urlsToRevoke.forEach(url => URL.revokeObjectURL(url));
+            const images = generatedImagesRef.current;
+            Object.values(images).forEach(image => {
+                if (image.url && image.url.startsWith('blob:')) {
+                    URL.revokeObjectURL(image.url);
+                }
+            });
         };
-    }, [generatedImages]);
+    }, []); // Empty dependency array ensures this runs only on unmount.
 
 
     const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -230,6 +237,12 @@ function App() {
         }
         
         console.log(`Regenerating image for ${decade}...`);
+        
+        // Revoke the old URL before fetching a new one to prevent memory leaks.
+        const oldUrl = generatedImages[decade]?.url;
+        if (oldUrl && oldUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(oldUrl);
+        }
 
         setGeneratedImages(prev => ({
             ...prev,
@@ -256,6 +269,12 @@ function App() {
     };
     
     const handleReset = () => {
+        // Explicitly revoke all generated image URLs to free up memory.
+        Object.values(generatedImages).forEach(image => {
+            if (image.url && image.url.startsWith('blob:')) {
+                URL.revokeObjectURL(image.url);
+            }
+        });
         setUploadedImage(null);
         setGeneratedImages({});
         setAppState('idle');
