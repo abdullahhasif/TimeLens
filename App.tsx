@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateDecadeImage } from './services/geminiService';
 import PolaroidCard from './components/PolaroidCard';
@@ -51,13 +51,13 @@ const ErrorDisplay = () => (
 );
 
 /**
- * Converts a HEIC file to a JPEG data URL. It first tries a native,
+ * Converts a HEIC file to a JPEG File object. It first tries a native,
  * canvas-based approach which is fast and works in browsers like Safari.
  * If that fails, it falls back to the heic2any library.
  * @param file The HEIC file to convert.
- * @returns A promise that resolves to a JPEG data URL string.
+ * @returns A promise that resolves to a JPEG File object.
  */
-const convertHeicToJpeg = (file: File): Promise<string> => {
+const convertHeicToJpeg = (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
         // Native canvas-based approach (works in Safari)
         const imageUrl = URL.createObjectURL(file);
@@ -75,7 +75,17 @@ const convertHeicToJpeg = (file: File): Promise<string> => {
             }
             ctx.drawImage(img, 0, 0);
             URL.revokeObjectURL(imageUrl);
-            resolve(canvas.toDataURL('image/jpeg', 0.92));
+            canvas.toBlob(
+                (blob) => {
+                    if (blob) {
+                        resolve(new File([blob], "image.jpeg", { type: "image/jpeg" }));
+                    } else {
+                        reject(new Error("Canvas toBlob conversion failed."));
+                    }
+                },
+                'image/jpeg',
+                0.92
+            );
         };
 
         img.onerror = async () => {
@@ -89,10 +99,7 @@ const convertHeicToJpeg = (file: File): Promise<string> => {
                     quality: 0.92,
                 });
                 const convertedBlob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = (e) => reject(e);
-                reader.readAsDataURL(convertedBlob as Blob);
+                resolve(new File([convertedBlob as Blob], "image.jpeg", { type: "image/jpeg" }));
             } catch (error) {
                 console.error("heic2any conversion failed:", error);
                 reject(error);
@@ -103,15 +110,43 @@ const convertHeicToJpeg = (file: File): Promise<string> => {
     });
 };
 
-
 function App() {
-    const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+    const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+    const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
     const [generatedImages, setGeneratedImages] = useState<Record<string, GeneratedImage>>({});
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
     const [appState, setAppState] = useState<'idle' | 'image-uploaded' | 'generating' | 'results-shown'>('idle');
     const [selectedDecade, setSelectedDecade] = useState<string>(DECADES[0]);
     const [isConvertingImage, setIsConvertingImage] = useState<boolean>(false);
+
+    // Effect to manage the object URL for the uploaded image
+    useEffect(() => {
+        let objectUrl: string | null = null;
+        if (uploadedImage) {
+            objectUrl = URL.createObjectURL(uploadedImage);
+            setUploadedImageUrl(objectUrl);
+        } else {
+            setUploadedImageUrl(null);
+        }
+
+        return () => {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+    }, [uploadedImage]);
+
+    // Effect to manage and revoke object URLs for generated images to prevent memory leaks
+    useEffect(() => {
+        const urlsToRevoke = Object.values(generatedImages)
+            .map(img => img.url)
+            .filter((url): url is string => !!url && url.startsWith('blob:'));
+
+        return () => {
+            urlsToRevoke.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [generatedImages]);
 
 
     const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -120,14 +155,17 @@ function App() {
             const fileName = file.name.toLowerCase();
             const fileType = file.type.toLowerCase();
 
+            // Reset state for the new upload
+            setUploadedImage(null);
+            setGeneratedImages({});
+
             // Check if it's an HEIC/HEIF file
             if (fileType.includes('heic') || fileType.includes('heif') || fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
                 setIsConvertingImage(true);
                 try {
-                    const jpegDataUrl = await convertHeicToJpeg(file);
-                    setUploadedImage(jpegDataUrl);
+                    const jpegFile = await convertHeicToJpeg(file);
+                    setUploadedImage(jpegFile);
                     setAppState('image-uploaded');
-                    setGeneratedImages({});
                 } catch (error) {
                     console.error("Error handling HEIC image:", error);
                     alert("Sorry, there was an error processing your iPhone photo. Please try another format like JPEG or PNG.");
@@ -136,14 +174,8 @@ function App() {
                     setIsConvertingImage(false);
                 }
             } else {
-                // For other image types, proceed as before
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setUploadedImage(reader.result as string);
-                    setAppState('image-uploaded');
-                    setGeneratedImages({});
-                };
-                reader.readAsDataURL(file);
+                setUploadedImage(file);
+                setAppState('image-uploaded');
             }
         }
     };
@@ -167,10 +199,12 @@ function App() {
         const processDecade = async (decade: string) => {
             try {
                 const prompt = `Reimagine the person in this photo in the style of the ${decade}. This includes clothing, hairstyle, photo quality, and the overall aesthetic of that decade. The output must be a photorealistic image showing the person clearly.`;
-                const resultUrl = await generateDecadeImage(uploadedImage, prompt);
+                const resultBlob = await generateDecadeImage(uploadedImage, prompt);
+                const objectUrl = URL.createObjectURL(resultBlob);
+
                 setGeneratedImages(prev => ({
                     ...prev,
-                    [decade]: { status: 'done', url: resultUrl },
+                    [decade]: { status: 'done', url: objectUrl },
                 }));
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
@@ -213,10 +247,12 @@ function App() {
 
         try {
             const prompt = `Reimagine the person in this photo in the style of the ${decade}. This includes clothing, hairstyle, photo quality, and the overall aesthetic of that decade. The output must be a photorealistic image showing the person clearly.`;
-            const resultUrl = await generateDecadeImage(uploadedImage, prompt);
+            const resultBlob = await generateDecadeImage(uploadedImage, prompt);
+            const objectUrl = URL.createObjectURL(resultBlob);
+
             setGeneratedImages(prev => ({
                 ...prev,
-                [decade]: { status: 'done', url: resultUrl },
+                [decade]: { status: 'done', url: objectUrl },
             }));
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
@@ -327,10 +363,10 @@ function App() {
                     </div>
                 )}
 
-                {appState === 'image-uploaded' && uploadedImage && (
+                {appState === 'image-uploaded' && uploadedImageUrl && (
                     <div className="flex flex-col items-center gap-6">
                          <PolaroidCard 
-                            imageUrl={uploadedImage} 
+                            imageUrl={uploadedImageUrl} 
                             caption="Your Photo" 
                             status="done"
                          />

@@ -17,6 +17,24 @@ const ai = new GoogleGenAI({ apiKey: API_KEY });
 // --- Helper Functions ---
 
 /**
+ * Converts a File object to a base64 encoded string (without the data URL prefix).
+ * @param file The file to convert.
+ * @returns A promise that resolves to the base64 string.
+ */
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result as string;
+            // remove the `data:image/...;base64,` part
+            resolve(result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
+/**
  * Creates a fallback prompt to use when the primary one is blocked.
  * @param decade The decade string (e.g., "1950s").
  * @returns The fallback prompt string.
@@ -36,22 +54,31 @@ function extractDecade(prompt: string): string | null {
 }
 
 /**
- * Processes the Gemini API response, extracting the image or throwing an error if none is found.
+ * Processes the Gemini API response, extracting the image data and returning it as a Blob.
  * @param response The response from the generateContent call.
- * @returns A data URL string for the generated image.
+ * @returns A Blob object for the generated image.
  */
-function processGeminiResponse(response: GenerateContentResponse): string {
+function processGeminiResponse(response: GenerateContentResponse): Blob {
     const imagePartFromResponse = response.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
 
     if (imagePartFromResponse?.inlineData) {
         const { mimeType, data } = imagePartFromResponse.inlineData;
-        return `data:${mimeType};base64,${data}`;
+        
+        // Convert base64 string to a Blob
+        const byteCharacters = atob(data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
     }
 
     const textResponse = response.text;
     console.error("API did not return an image. Response:", textResponse);
     throw new Error(`The AI model responded with text instead of an image: "${textResponse || 'No text response received.'}"`);
 }
+
 
 /**
  * A wrapper for the Gemini API call that includes a retry mechanism for internal server errors.
@@ -91,16 +118,16 @@ async function callGeminiWithRetry(imagePart: object, textPart: object): Promise
 /**
  * Generates a decade-styled image from a source image and a prompt.
  * It includes a fallback mechanism for prompts that might be blocked in certain regions.
- * @param imageDataUrl A data URL string of the source image (e.g., 'data:image/png;base64,...').
+ * @param imageFile The source image as a File object.
  * @param prompt The prompt to guide the image generation.
- * @returns A promise that resolves to a base64-encoded image data URL of the generated image.
+ * @returns A promise that resolves to a Blob of the generated image.
  */
-export async function generateDecadeImage(imageDataUrl: string, prompt: string): Promise<string> {
-  const match = imageDataUrl.match(/^data:(image\/\w+);base64,(.*)$/);
-  if (!match) {
-    throw new Error("Invalid image data URL format. Expected 'data:image/...;base64,...'");
+export async function generateDecadeImage(imageFile: File, prompt: string): Promise<Blob> {
+  if (!imageFile) {
+      throw new Error("An image file must be provided.");
   }
-  const [, mimeType, base64Data] = match;
+  const mimeType = imageFile.type;
+  const base64Data = await fileToBase64(imageFile);
 
     const imagePart = {
         inlineData: { mimeType, data: base64Data },
