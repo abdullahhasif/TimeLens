@@ -7,22 +7,23 @@ import { motion } from 'framer-motion';
 
 // Using gradients to represent the images to avoid adding new assets.
 // The styles are inspired by the colors in the provided screenshot.
-// x, y in rem, r in degrees
+// The positions (x, y in rem) and rotations (r in degrees) are mathematically
+// calculated to create a smooth arc with even spacing between each image.
 const imageStyles = [
-    // Left side. Tuned for a more pronounced, organic curve.
-    { x: -38, y: 10, r: -60, zIndex: 0, background: 'linear-gradient(135deg, #2d3748, #000)' },
-    { x: -33, y: 5, r: -50, zIndex: 1, background: 'linear-gradient(135deg, #2d3748, #000)' },
-    { x: -25, y: 0, r: -35, zIndex: 2, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
-    { x: -16, y: -4, r: -20, zIndex: 3, background: 'linear-gradient(135deg, #ec4899, #d946ef)' },
-    { x: -8, y: -5.8, r: -8, zIndex: 4, background: 'linear-gradient(135deg, #f97316, #a855f7)' },
+    // Left side.
+    { x: -32.5, y: 10, r: -60, zIndex: 0, background: 'linear-gradient(135deg, #2d3748, #000)' },
+    { x: -26, y: 4.2, r: -48, zIndex: 1, background: 'linear-gradient(135deg, #2d3748, #000)' },
+    { x: -19.5, y: -0.3, r: -36, zIndex: 2, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
+    { x: -13, y: -3.4, r: -24, zIndex: 3, background: 'linear-gradient(135deg, #ec4899, #d946ef)' },
+    { x: -6.5, y: -5.4, r: -12, zIndex: 4, background: 'linear-gradient(135deg, #f97316, #a855f7)' },
     // Center
     { x: 0, y: -6, r: 0, zIndex: 5, background: 'linear-gradient(135deg, #1a202c, #4a5568)' },
     // Right side
-    { x: 8, y: -5.8, r: 8, zIndex: 6, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
-    { x: 16, y: -4, r: 20, zIndex: 7, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
-    { x: 25, y: 0, r: 35, zIndex: 8, background: 'linear-gradient(135deg, #5b21b6, #312e81)' },
-    { x: 33, y: 5, r: 50, zIndex: 9, background: 'linear-gradient(135deg, #5b21b6, #000)' },
-    { x: 38, y: 10, r: 60, zIndex: 10, background: 'linear-gradient(135deg, #fff, #60a5fa)' },
+    { x: 6.5, y: -5.4, r: 12, zIndex: 6, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
+    { x: 13, y: -3.4, r: 24, zIndex: 7, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
+    { x: 19.5, y: -0.3, r: 36, zIndex: 8, background: 'linear-gradient(135deg, #5b21b6, #312e81)' },
+    { x: 26, y: 4.2, r: 48, zIndex: 9, background: 'linear-gradient(135deg, #5b21b6, #000)' },
+    { x: 32.5, y: 10, r: 60, zIndex: 10, background: 'linear-gradient(135deg, #fff, #60a5fa)' },
 ];
 
 
