@@ -5,25 +5,25 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-// Using gradients to represent the images to avoid adding new assets.
-// The styles are inspired by the colors in the provided screenshot.
 // The positions (x, y in rem) and rotations (r in degrees) are mathematically
-// calculated to create a smooth arc with even spacing between each image.
+// calculated to create a deep, smooth arc with even spacing between each image,
+// closely matching the reference design.
+// Images are loaded from a CDN to provide dynamic, random visuals.
 const imageStyles = [
     // Left side.
-    { x: -32.5, y: 10, r: -60, zIndex: 0, background: 'linear-gradient(135deg, #2d3748, #000)' },
-    { x: -26, y: 4.2, r: -48, zIndex: 1, background: 'linear-gradient(135deg, #2d3748, #000)' },
-    { x: -19.5, y: -0.3, r: -36, zIndex: 2, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
-    { x: -13, y: -3.4, r: -24, zIndex: 3, background: 'linear-gradient(135deg, #ec4899, #d946ef)' },
-    { x: -6.5, y: -5.4, r: -12, zIndex: 4, background: 'linear-gradient(135deg, #f97316, #a855f7)' },
+    { x: -32.5, y: 14, r: -70, zIndex: 0, imageUrl: 'https://picsum.photos/seed/a1/200' },
+    { x: -26, y: 6, r: -56, zIndex: 1, imageUrl: 'https://picsum.photos/seed/b2/200' },
+    { x: -19.5, y: 0, r: -42, zIndex: 2, imageUrl: 'https://picsum.photos/seed/c3/200' },
+    { x: -13, y: -4, r: -28, zIndex: 3, imageUrl: 'https://picsum.photos/seed/d4/200' },
+    { x: -6.5, y: -7, r: -14, zIndex: 4, imageUrl: 'https://picsum.photos/seed/e5/200' },
     // Center
-    { x: 0, y: -6, r: 0, zIndex: 5, background: 'linear-gradient(135deg, #1a202c, #4a5568)' },
+    { x: 0, y: -8, r: 0, zIndex: 5, imageUrl: 'https://picsum.photos/seed/f6/200' },
     // Right side
-    { x: 6.5, y: -5.4, r: 12, zIndex: 6, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
-    { x: 13, y: -3.4, r: 24, zIndex: 7, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
-    { x: 19.5, y: -0.3, r: 36, zIndex: 8, background: 'linear-gradient(135deg, #5b21b6, #312e81)' },
-    { x: 26, y: 4.2, r: 48, zIndex: 9, background: 'linear-gradient(135deg, #5b21b6, #000)' },
-    { x: 32.5, y: 10, r: 60, zIndex: 10, background: 'linear-gradient(135deg, #fff, #60a5fa)' },
+    { x: 6.5, y: -7, r: 14, zIndex: 6, imageUrl: 'https://picsum.photos/seed/g7/200' },
+    { x: 13, y: -4, r: 28, zIndex: 7, imageUrl: 'https://picsum.photos/seed/h8/200' },
+    { x: 19.5, y: 0, r: 42, zIndex: 8, imageUrl: 'https://picsum.photos/seed/i9/200' },
+    { x: 26, y: 6, r: 56, zIndex: 9, imageUrl: 'https://picsum.photos/seed/j10/200' },
+    { x: 32.5, y: 14, r: 70, zIndex: 10, imageUrl: 'https://picsum.photos/seed/k11/200' },
 ];
 
 
@@ -43,7 +43,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               className="absolute w-28 h-28 md:w-32 md:h-32 rounded-2xl shadow-xl bg-gray-200"
               style={{
                 top: '-3.5rem', left: '-3.5rem', // Center the images
-                background: style.background,
+                backgroundImage: `url(${style.imageUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
                 zIndex: style.zIndex
               }}
               initial={{ opacity: 0, scale: 0.5, x: 0, y: 0, rotate: 0 }}
