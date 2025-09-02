@@ -9,20 +9,20 @@ import { motion } from 'framer-motion';
 // The styles are inspired by the colors in the provided screenshot.
 // x, y in rem, r in degrees
 const imageStyles = [
-    // Left side
-    { x: -45, y: 4, r: -40, zIndex: 0, background: 'linear-gradient(135deg, #2d3748, #000)' },
-    { x: -36, y: 0.4, r: -32, zIndex: 1, background: 'linear-gradient(135deg, #2d3748, #000)' },
-    { x: -27, y: -2.4, r: -24, zIndex: 2, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
-    { x: -18, y: -4.4, r: -16, zIndex: 3, background: 'linear-gradient(135deg, #ec4899, #d946ef)' },
-    { x: -9, y: -5.6, r: -8, zIndex: 4, background: 'linear-gradient(135deg, #f97316, #a855f7)' },
+    // Left side. Tuned for a more pronounced, organic curve.
+    { x: -38, y: 10, r: -60, zIndex: 0, background: 'linear-gradient(135deg, #2d3748, #000)' },
+    { x: -33, y: 5, r: -50, zIndex: 1, background: 'linear-gradient(135deg, #2d3748, #000)' },
+    { x: -25, y: 0, r: -35, zIndex: 2, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
+    { x: -16, y: -4, r: -20, zIndex: 3, background: 'linear-gradient(135deg, #ec4899, #d946ef)' },
+    { x: -8, y: -5.8, r: -8, zIndex: 4, background: 'linear-gradient(135deg, #f97316, #a855f7)' },
     // Center
     { x: 0, y: -6, r: 0, zIndex: 5, background: 'linear-gradient(135deg, #1a202c, #4a5568)' },
     // Right side
-    { x: 9, y: -5.6, r: 8, zIndex: 6, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
-    { x: 18, y: -4.4, r: 16, zIndex: 7, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
-    { x: 27, y: -2.4, r: 24, zIndex: 8, background: 'linear-gradient(135deg, #5b21b6, #312e81)' },
-    { x: 36, y: 0.4, r: 32, zIndex: 9, background: 'linear-gradient(135deg, #5b21b6, #000)' },
-    { x: 45, y: 4, r: 40, zIndex: 10, background: 'linear-gradient(135deg, #fff, #60a5fa)' },
+    { x: 8, y: -5.8, r: 8, zIndex: 6, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
+    { x: 16, y: -4, r: 20, zIndex: 7, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
+    { x: 25, y: 0, r: 35, zIndex: 8, background: 'linear-gradient(135deg, #5b21b6, #312e81)' },
+    { x: 33, y: 5, r: 50, zIndex: 9, background: 'linear-gradient(135deg, #5b21b6, #000)' },
+    { x: 38, y: 10, r: 60, zIndex: 10, background: 'linear-gradient(135deg, #fff, #60a5fa)' },
 ];
 
 
@@ -59,7 +59,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </div>
 
       {/* Content container */}
-      <div className="z-10 flex flex-col items-center justify-center text-center" style={{ marginTop: '16rem' }}>
+      <div className="z-10 flex flex-col items-center justify-center text-center" style={{ marginTop: '12rem' }}>
         <motion.h1
           className="text-5xl md:text-7xl font-extrabold tracking-tighter"
           initial={{ opacity: 0, y: 20 }}
