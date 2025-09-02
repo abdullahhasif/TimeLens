@@ -59,7 +59,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </div>
 
       {/* Content container */}
-      <div className="z-10 flex flex-col items-center justify-center text-center" style={{ marginTop: '20rem' }}>
+      <div className="z-10 flex flex-col items-center justify-center text-center" style={{ marginTop: '16rem' }}>
         <motion.h1
           className="text-5xl md:text-7xl font-extrabold tracking-tighter"
           initial={{ opacity: 0, y: 20 }}
