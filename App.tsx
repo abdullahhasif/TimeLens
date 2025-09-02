@@ -10,6 +10,7 @@ import { createAlbumPage } from './lib/albumUtils';
 import Footer from './components/Footer';
 import heic2any from 'heic2any';
 import { resizeImage } from './lib/imageUtils';
+import LandingPage from './components/LandingPage';
 
 const DECADES = ['1950s', '1960s', '1970s', '1980s', '1990s', '2000s'];
 
@@ -112,6 +113,7 @@ const convertHeicToJpeg = (file: File): Promise<File> => {
 };
 
 function App() {
+    const [showLandingPage, setShowLandingPage] = useState(true);
     const [uploadedImage, setUploadedImage] = useState<File | null>(null);
     const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
     const [generatedImages, setGeneratedImages] = useState<Record<string, GeneratedImage>>({});
@@ -323,6 +325,10 @@ function App() {
             setIsDownloading(false);
         }
     };
+
+    if (showLandingPage) {
+        return <LandingPage onStart={() => setShowLandingPage(false)} />;
+    }
 
     return (
         <main className="bg-black text-neutral-200 min-h-screen w-full flex flex-col items-center justify-center p-4 pb-24 overflow-hidden relative">
