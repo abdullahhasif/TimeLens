@@ -10,19 +10,19 @@ import { motion } from 'framer-motion';
 // x, y in rem, r in degrees
 const imageStyles = [
     // Left side
-    { x: -35, y: 5, r: -45, zIndex: 0, background: 'linear-gradient(135deg, #2d3748, #000)' },
-    { x: -28, y: -0.4, r: -36, zIndex: 1, background: 'linear-gradient(135deg, #2d3748, #000)' },
-    { x: -21, y: -4.6, r: -27, zIndex: 2, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
-    { x: -14, y: -7.6, r: -18, zIndex: 3, background: 'linear-gradient(135deg, #ec4899, #d946ef)' },
-    { x: -7, y: -9.4, r: -9, zIndex: 4, background: 'linear-gradient(135deg, #f97316, #a855f7)' },
+    { x: -45, y: 4, r: -40, zIndex: 0, background: 'linear-gradient(135deg, #2d3748, #000)' },
+    { x: -36, y: 0.4, r: -32, zIndex: 1, background: 'linear-gradient(135deg, #2d3748, #000)' },
+    { x: -27, y: -2.4, r: -24, zIndex: 2, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' },
+    { x: -18, y: -4.4, r: -16, zIndex: 3, background: 'linear-gradient(135deg, #ec4899, #d946ef)' },
+    { x: -9, y: -5.6, r: -8, zIndex: 4, background: 'linear-gradient(135deg, #f97316, #a855f7)' },
     // Center
-    { x: 0, y: -10, r: 0, zIndex: 5, background: 'linear-gradient(135deg, #1a202c, #4a5568)' },
+    { x: 0, y: -6, r: 0, zIndex: 5, background: 'linear-gradient(135deg, #1a202c, #4a5568)' },
     // Right side
-    { x: 7, y: -9.4, r: 9, zIndex: 6, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
-    { x: 14, y: -7.6, r: 18, zIndex: 7, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
-    { x: 21, y: -4.6, r: 27, zIndex: 8, background: 'linear-gradient(135deg, #5b21b6, #312e81)' },
-    { x: 28, y: -0.4, r: 36, zIndex: 9, background: 'linear-gradient(135deg, #5b21b6, #000)' },
-    { x: 35, y: 5, r: 45, zIndex: 10, background: 'linear-gradient(135deg, #fff, #60a5fa)' },
+    { x: 9, y: -5.6, r: 8, zIndex: 6, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
+    { x: 18, y: -4.4, r: 16, zIndex: 7, background: 'linear-gradient(135deg, #7e22ce, #4c1d95)' },
+    { x: 27, y: -2.4, r: 24, zIndex: 8, background: 'linear-gradient(135deg, #5b21b6, #312e81)' },
+    { x: 36, y: 0.4, r: 32, zIndex: 9, background: 'linear-gradient(135deg, #5b21b6, #000)' },
+    { x: 45, y: 4, r: 40, zIndex: 10, background: 'linear-gradient(135deg, #fff, #60a5fa)' },
 ];
 
 
@@ -59,7 +59,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </div>
 
       {/* Content container */}
-      <div className="z-10 flex flex-col items-center justify-center text-center" style={{ marginTop: '22rem' }}>
+      <div className="z-10 flex flex-col items-center justify-center text-center" style={{ marginTop: '20rem' }}>
         <motion.h1
           className="text-5xl md:text-7xl font-extrabold tracking-tighter"
           initial={{ opacity: 0, y: 20 }}
