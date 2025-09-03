@@ -2,9 +2,114 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // FIX: Import `MotionProps` to correctly type the animation configuration object.
 import { motion, AnimatePresence, MotionProps } from 'framer-motion';
+
+// --- NEW AUTH MODAL COMPONENT ---
+interface AuthModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSuccess: () => void;
+    initialMode: 'signin' | 'signup';
+    setMode: (mode: 'signin' | 'signup') => void;
+}
+
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, initialMode, setMode }) => {
+    const isSignUp = initialMode === 'signup';
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // In a real app, you'd have validation and an API call here.
+        // For this demo, we'll just call the success handler.
+        onSuccess();
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={onClose}
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                >
+                    <motion.div
+                        initial={{ scale: 0.95, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.95, y: 20 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 relative"
+                    >
+                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition">
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                        <h2 className="text-3xl font-bold text-center mb-2">{isSignUp ? 'Create Your Account' : 'Welcome Back'}</h2>
+                        <p className="text-gray-500 text-center mb-8">{isSignUp ? 'Start your journey through time.' : 'Sign in to continue.'}</p>
+                        
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <input type="email" id="email" required className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-gray-900 focus:border-gray-900 transition" placeholder="you@example.com" />
+                            </div>
+                             <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input type="password" id="password" required minLength={6} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-gray-900 focus:border-gray-900 transition" placeholder="••••••••" />
+                            </div>
+                            {isSignUp && (
+                                <div>
+                                    <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                                    <input type="password" id="confirm-password" required minLength={6} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-gray-900 focus:border-gray-900 transition" placeholder="••••••••" />
+                                </div>
+                            )}
+                            <button type="submit" className="w-full bg-gray-900 text-white py-3 rounded-md font-semibold hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2">
+                                {isSignUp ? 'Sign Up' : 'Sign In'}
+                            </button>
+                        </form>
+                        
+                        <p className="text-center text-sm text-gray-500 mt-6">
+                            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                            <button onClick={() => setMode(isSignUp ? 'signin' : 'signup')} className="font-semibold text-gray-800 hover:underline">
+                                {isSignUp ? 'Sign In' : 'Sign Up'}
+                            </button>
+                        </p>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+
+// --- NEW HEADER COMPONENT ---
+const Header = ({ openModal }: { openModal: (mode: 'signin' | 'signup') => void; }) => (
+    <motion.header 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="fixed top-0 left-0 right-0 z-40 p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200/80"
+    >
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <span className="font-bold text-2xl tracking-tighter">TimeLens</span>
+            <div className="flex items-center gap-2 sm:gap-4">
+                <button 
+                    onClick={() => openModal('signin')} 
+                    className="px-4 py-2 rounded-full font-semibold text-gray-700 text-sm sm:text-base hover:bg-gray-200/60 transition-colors"
+                >
+                    Sign In
+                </button>
+                <button 
+                    onClick={() => openModal('signup')} 
+                    className="bg-gray-900 text-white px-4 py-2 rounded-full font-semibold text-sm sm:text-base hover:bg-gray-700 transition-colors"
+                >
+                    Sign Up
+                </button>
+            </div>
+        </div>
+    </motion.header>
+);
 
 // The positions (x, y in rem) and rotations (r in degrees) are mathematically
 // calculated to create a deep, smooth arc with even spacing between each image,
@@ -162,7 +267,7 @@ const FAQ = () => {
     );
 };
 
-const FinalCTA = ({ onStart }: { onStart: () => void }) => (
+const FinalCTA = ({ openModal }: { openModal: (mode: 'signup' | 'signin') => void }) => (
     <motion.section {...sectionAnimation} className="py-20 sm:py-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter">Ready to See Your Past Selves?</h2>
@@ -170,7 +275,7 @@ const FinalCTA = ({ onStart }: { onStart: () => void }) => (
                 Your journey through time is just a click away. Get started now and create your own personal photo album of the decades.
             </p>
             <button
-                onClick={onStart}
+                onClick={() => openModal('signup')}
                 className="bg-gray-900 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transform hover:scale-105"
             >
                 Try TimeLens Now
@@ -205,10 +310,23 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'signin' | 'signup'>('signup');
+
+    const openModal = (mode: 'signin' | 'signup') => {
+        setModalMode(mode);
+        setModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setModalOpen(false);
+    };
+
   return (
     <div className="bg-white text-gray-900 min-h-screen w-full">
+      <Header openModal={openModal} />
       {/* Hero Section */}
-      <div className="relative min-h-screen flex flex-col items-center p-4 overflow-hidden">
+      <div className="relative min-h-screen flex flex-col items-center p-4 overflow-hidden pt-24">
         {/* Container for the image arc */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ top: '30%' }}>
           <div className="relative w-1 h-1">
@@ -255,21 +373,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             Upload a photo and journey through the eras.
           </motion.p>
           <motion.div
-            className="flex items-center justify-center gap-4 mt-8"
+            className="mt-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.2 }}
           >
             <button
-              onClick={onStart}
-              className="bg-gray-900 text-white px-7 py-3 rounded-full font-semibold text-base hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                onClick={() => openModal('signup')}
+                className="bg-gray-900 text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transform hover:scale-105"
             >
-              Try TimeLens
-            </button>
-            <button
-              className="bg-white text-gray-900 border border-gray-300 px-7 py-3 rounded-full font-semibold text-base hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-            >
-              Learn more
+              Get Started for Free
             </button>
           </motion.div>
         </div>
@@ -289,9 +402,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       <HowItWorks />
       <Gallery />
       <FAQ />
-      <FinalCTA onStart={onStart} />
+      <FinalCTA openModal={openModal} />
       <LandingFooter />
 
+      <AuthModal 
+        isOpen={modalOpen}
+        onClose={closeModal}
+        onSuccess={() => {
+            closeModal();
+            onStart();
+        }}
+        initialMode={modalMode}
+        setMode={setModalMode}
+      />
     </div>
   );
 };
